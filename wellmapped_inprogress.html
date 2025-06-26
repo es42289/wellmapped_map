@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>PLSSIntersected States Map</title>
+  <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+  <script src="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.js"></script>
+  <link href="https://api.mapbox.com/mapbox-gl-js/v2.14.1/mapbox-gl.css" rel="stylesheet" />
+  <style>
+    body { margin: 0; padding: 0; }
+    #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+    .mapboxgl-popup {
+      max-width: 300px;
+      font: 12px/1.5 sans-serif;
+    }
+  </style>
+</head>
+<body>
+<div id="map"></div>
+<script>
+  mapboxgl.accessToken = 'pk.eyJ1Ijoid2VsbG1hcHBlZCIsImEiOiJjbGlreXVsMWowNDg5M2ZxcGZucDV5bnIwIn0.5wYuJnmZvUbHZh9M580M-Q';
+
+  const map = new mapboxgl.Map({
+    container: 'map',
+    style: 'mapbox://styles/mapbox/light-v11',
+    center: [-98.35, 39.5],
+    zoom: 4
+  });
+
+  const states = [
+    { id: 'alabama', layer: 'PLSSIntersected' },
+    { id: 'florida', layer: 'PLSSIntersected' },
+    { id: 'louisiana', layer: 'PLSSIntersected' },
+    { id: 'texas', layer: 'texas' },
+    { id: 'colorado', layer: 'PLSSIntersected' },
+    { id: 'nebraska', layer: 'PLSSIntersected' }
+  ];
+
+  map.on('load', () => {
+    states.forEach(({ id, layer }) => {
+      const sourceId = `${id}-source`;
+      const fillId = `${id}-fill`;
+
+      map.addSource(sourceId, {
+        type: 'vector',
+        url: `mapbox://wellmapped.${id}`
+      });
+
+      map.addLayer({
+        id: fillId,
+        type: 'fill',
+        source: sourceId,
+        'source-layer': layer,
+        paint: {
+          'fill-color': '#088',
+          'fill-opacity': 0.4
+        }
+      });
+
+      map.addLayer({
+        id: `${fillId}-outline`,
+        type: 'line',
+        source: sourceId,
+        'source-layer': layer,
+        paint: {
+          'line-color': '#000',
+          'line-width': 0.5
+        }
+      });
+
+      map.on('click', fillId, (e) => {
+        const props = e.features[0].properties;
+        const description = Object.entries(props)
+          .map(([k, v]) => `<strong>${k}:</strong> ${v}`).join('<br>');
+        new mapboxgl.Popup()
+          .setLngLat(e.lngLat)
+          .setHTML(description)
+          .addTo(map);
+      });
+
+      map.on('mouseenter', fillId, () => {
+        map.getCanvas().style.cursor = 'pointer';
+      });
+      map.on('mouseleave', fillId, () => {
+        map.getCanvas().style.cursor = '';
+      });
+    });
+  });
+</script>
+</body>
+</html>
