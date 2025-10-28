@@ -23,46 +23,37 @@
   const map = new mapboxgl.Map({
     container: 'map',
     style: 'mapbox://styles/mapbox/light-v11',
-    center: [-98.35, 39.5],
-    zoom: 4
+    center: [-103.20, 31.9],
+    zoom: 8
   });
-  const states = [
-    { id: 'PLSS_and_Texas', layer: 'plss_intersected' },
-    { id: 'PLSS_and_Texas', layer: 'plss_sections' },
-    { id: 'PLSS_and_Texas', layer: 'plss_townships' },
-    { id: 'PLSS_and_Texas', layer: 'texas' },
-  ];
 
   map.on('load', () => {
-    states.forEach(({ id, layer }) => {
-      const sourceId = `${id}-source`;
-      const fillId = `${id}-fill`;
+    // add the shared vector source once
+    map.addSource('plss_source', {
+      type: 'vector',
+      url: 'mapbox://es42289.PLSS_and_Texas'
+    });
 
-      map.addSource(sourceId, {
-        type: 'vector',
-        url: `mapbox://es42289.${id}`
-      });
+    // now add multiple layers from that same source
+    const layers = ['plss_intersected', 'plss_sections', 'plss_townships', 'texas'];
+
+    layers.forEach(layer => {
+      const fillId = `${layer}-fill`;
 
       map.addLayer({
         id: fillId,
         type: 'fill',
-        source: sourceId,
+        source: 'plss_source',
         'source-layer': layer,
-        paint: {
-          'fill-color': '#088',
-          'fill-opacity': 0.4
-        }
+        paint: { 'fill-color': '#088', 'fill-opacity': 0.4 }
       });
 
       map.addLayer({
         id: `${fillId}-outline`,
         type: 'line',
-        source: sourceId,
+        source: 'plss_source',
         'source-layer': layer,
-        paint: {
-          'line-color': '#000',
-          'line-width': 0.5
-        }
+        paint: { 'line-color': '#000', 'line-width': 0.5 }
       });
 
       map.on('click', fillId, (e) => {
@@ -75,16 +66,16 @@
           .addTo(map);
       });
 
-      map.on('mouseenter', fillId, () => {
-        map.getCanvas().style.cursor = 'pointer';
-      });
-      map.on('mouseleave', fillId, () => {
-        map.getCanvas().style.cursor = '';
-      });
+      map.on('mouseenter', fillId, () => map.getCanvas().style.cursor = 'pointer');
+      map.on('mouseleave', fillId, () => map.getCanvas().style.cursor = '');
     });
   });
+
+  map.on('idle', () => {
+    console.log('Sources:', map.getStyle().sources);
+    console.log('Layers:', map.getStyle().layers.map(l => l.id));
+});
 </script>
 </body>
 </html>
-
 
